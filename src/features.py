@@ -18,7 +18,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from src.config import FEATURE_NAMES_PATH, MODEL_THRESHOLD, PREPROCESSOR_PATH
+from src.config import FEATURE_NAMES_PATH, PREPROCESSOR_PATH
 from src.logger import get_logger
 
 logger = get_logger(__name__)

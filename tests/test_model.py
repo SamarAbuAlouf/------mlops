@@ -5,7 +5,6 @@ Model tests: model loads, predicts valid shape and probability ranges, behaves o
 Requirement 6: Model tests: the model loads, predicts the right shape, behaves on known inputs.
 """
 import numpy as np
-import pytest
 from src.predict import load_model, predict, predict_batch
 
 

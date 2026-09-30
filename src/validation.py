@@ -9,8 +9,7 @@ Requirement 4:
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
-import numpy as np
+from typing import Any, List, Tuple
 import pandas as pd
 
 from src.config import CONFIG

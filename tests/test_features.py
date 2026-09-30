@@ -3,8 +3,7 @@ tests/test_features.py
 Unit tests for feature engineering and transformation pipeline in src/features.py.
 """
 import numpy as np
-import pandas as pd
-from src.features import ALL_FEATURES, engineer_features, load_preprocessor, transform
+from src.features import engineer_features, load_preprocessor, transform
 
 
 def test_engineer_features_creates_required_columns(sample_raw_order_df):

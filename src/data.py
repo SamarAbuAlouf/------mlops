@@ -10,10 +10,9 @@ Requirement 2: Separate concerns — data access is isolated here.
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 
 from src.config import DB_URL
 from src.logger import get_logger

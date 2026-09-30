@@ -4,7 +4,6 @@ Data tests: schema, ranges, null rates, and leakage checks.
 
 Requirement 6: Data tests: schema, ranges, nulls, leakage checks.
 """
-import pandas as pd
 import pytest
 from src.features import ALL_FEATURES
 from src.validation import DataValidator, DataValidationError

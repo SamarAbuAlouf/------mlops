@@ -18,7 +18,7 @@ from app.schemas import (
     OrderInput,
     PredictionResponse,)
 
-from src.features import order_dict_to_array, transform
+from src.features import transform
 from src.logger import get_logger
 from src.predict import get_model_version, predict, predict_batch
 from src.validation import DataValidationError, default_validator

@@ -5,13 +5,12 @@ Loads config/config.yaml and resolves environment-variable placeholders.
 Every module imports settings from here; nothing reads config.yaml directly.
 """
 from __future__ import annotations
-
 import os
 import re
 from pathlib import Path
 from typing import Any
-
 import yaml
+from dotenv import load_dotenv
 
 _ROOT = Path(__file__).parent.parent
 _CONFIG_PATH = _ROOT / "config" / "config.yaml"
@@ -41,9 +40,6 @@ def load_config(path: Path = _CONFIG_PATH) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
     return _resolve_env(raw)
-
-
-from dotenv import load_dotenv
 
 # Load local .env if present
 load_dotenv()
