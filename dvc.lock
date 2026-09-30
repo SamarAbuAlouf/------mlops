@@ -1,0 +1,28 @@
+schema: '2.0'
+stages:
+  inference_verify:
+    cmd: python -c "from src.features import transform; from src.predict import 
+      predict; import pandas as pd; 
+      df=pd.read_parquet('artifacts/data/03_test.parquet').head(5); 
+      print(predict(transform(df)[:1]))"
+    deps:
+    - path: artifacts/data/03_test.parquet
+      hash: md5
+      md5: 89a551ee03dc56e3e2e361497fd61831
+      size: 3045885
+    - path: artifacts/models/final_model.joblib
+      hash: md5
+      md5: c4c29f4cb7511a30a97070b0d909c084
+      size: 329592
+    - path: artifacts/models/preprocessor.joblib
+      hash: md5
+      md5: 5e824ce6fde2bc9f0df40d400f7d2f2f
+      size: 6877
+    - path: src/features.py
+      hash: md5
+      md5: db23b971775d0b75af9f18eb31bee6eb
+      size: 7648
+    - path: src/predict.py
+      hash: md5
+      md5: 0ad9659be92465653a9193f757918f4e
+      size: 4513

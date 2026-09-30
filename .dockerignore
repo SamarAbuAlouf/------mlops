@@ -1,0 +1,16 @@
+.git
+.gitignore
+.dvc
+.dvcignore
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+notebooks
+tests
+*.pdf
+logs/*.log
+logs/*.jsonl
+artifacts/data/*.csv
+artifacts/data/*.parquet
+artifacts/figures/*.png

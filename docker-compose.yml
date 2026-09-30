@@ -1,0 +1,90 @@
+# =============================================================================
+# Docker Compose — Complete MLOps Serving Stack
+# Database (PostgreSQL) + Experiment Store (MLflow) + Prediction Service (FastAPI)
+#
+# Usage:
+#   docker compose up -d --build
+# =============================================================================
+version: "3.8"
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. PostgreSQL Database Service
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: olist-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-olist}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - olist-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d olist"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # 2. MLflow Tracking Server & Artifact Store
+  # ---------------------------------------------------------------------------
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.14.1
+    container_name: olist-mlflow
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - BACKEND_STORE_URI=sqlite:///mlflow.db
+      - DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    networks:
+      - olist-net
+
+  # ---------------------------------------------------------------------------
+  # 3. FastAPI Prediction Service
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: olist-inference-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - olist-net
+
+# ---------------------------------------------------------------------------
+# Networks and Volumes
+# ---------------------------------------------------------------------------
+networks:
+  olist-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mlflow_data:

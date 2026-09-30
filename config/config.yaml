@@ -1,0 +1,105 @@
+# =============================================================================
+# Olist Delivery Delay Prediction — Central Configuration
+# All paths and parameters live here; nothing is hardcoded in source files.
+# =============================================================================
+
+project:
+  name: olist-delay-prediction
+  version: "1.0.0"
+  description: "MLOps Task 3 — Inference service for delivery delay prediction"
+
+# ---------------------------------------------------------------------------
+# Database (PostgreSQL inside Docker)
+# ---------------------------------------------------------------------------
+database:
+  host: "${DB_HOST:localhost}"
+  port: 5432
+  name: olist
+  user: postgres
+  # password comes from env var DB_PASSWORD (never hardcoded)
+
+# ---------------------------------------------------------------------------
+# Artifact paths (relative to project root)
+# ---------------------------------------------------------------------------
+artifacts:
+  root: "artifacts"
+  models_dir: "artifacts/models"
+  data_dir: "artifacts/data"
+  reports_dir: "artifacts/reports"
+  figures_dir: "artifacts/figures"
+  # Specific model files
+  preprocessor: "artifacts/models/preprocessor.joblib"
+  final_model: "artifacts/models/final_model.joblib"
+  feature_names: "artifacts/models/feature_names.json"
+
+# ---------------------------------------------------------------------------
+# MLflow tracking
+# ---------------------------------------------------------------------------
+mlflow:
+  tracking_uri: "${MLFLOW_TRACKING_URI:http://localhost:5000}"
+  experiment_name: "olist-delay-prediction"
+  model_name: "olist-delay-classifier"
+  # Stage to load from registry (None means load latest version artifact)
+  model_stage: "Production"
+
+# ---------------------------------------------------------------------------
+# Model inference
+# ---------------------------------------------------------------------------
+model:
+  # Decision threshold tuned in Notebook 6
+  threshold: 0.50
+  # Expected feature count (16 numerical + 8 categorical = 24)
+  expected_feature_count: 24
+
+# ---------------------------------------------------------------------------
+# FastAPI service
+# ---------------------------------------------------------------------------
+api:
+  host: "0.0.0.0"
+  port: 8000
+  title: "Olist Delivery Delay Prediction API"
+  description: "Predicts whether an order will be delivered late."
+  version: "1.0.0"
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+  log_dir: "logs"
+  app_log_file: "logs/app.log"
+  prediction_log_file: "logs/predictions.jsonl"
+
+# ---------------------------------------------------------------------------
+# Data validation (Great Expectations)
+# ---------------------------------------------------------------------------
+validation:
+  # Action when validation fails: "reject" | "flag" | "default"
+  on_failure: "flag"
+  # Allowed missing rate per column (above this triggers a warning)
+  max_missing_rate: 0.30
+  # Numerical feature ranges (inclusive) — derived from training data
+  numeric_ranges:
+    distance_km: [0, 5000]
+    total_price: [0, 15000]
+    total_freight: [0, 800]
+    estimated_delivery_days: [1, 365]
+    order_items_count: [1, 50]
+    total_weight_g: [0, 40000]
+    total_volume_cm3: [0, 600000]
+    total_payment_value: [0, 15000]
+    max_payment_installments: [1, 24]
+    freight_ratio: [0, 1]
+    freight_per_item: [0, 400]
+    price_per_item: [0, 7500]
+    density_g_cm3: [0, 10]
+    purchase_month: [1, 12]
+    purchase_dayofweek: [0, 6]
+    purchase_hour: [0, 23]
+  # Allowed categorical values
+  categorical_allowed:
+    dominant_payment_type: ["credit_card", "boleto", "voucher", "debit_card", "not_defined", "missing"]
+    is_same_state: [0, 1]
+    is_inter_region: [0, 1]
+    purchase_is_weekend: [0, 1]
