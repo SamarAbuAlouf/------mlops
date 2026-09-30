@@ -48,10 +48,7 @@ class OrderInput(BaseModel):
                 "distance_km": 18.5,
                 "estimated_delivery_days": 15.5,
                 "order_purchase_timestamp": "2017-10-02 10:56:33",
-                "order_estimated_delivery_date": "2017-10-18 00:00:00"
-            }
-        }
-    }
+                "order_estimated_delivery_date": "2017-10-18 00:00:00"}}}
 
 
 class PredictionResponse(BaseModel):

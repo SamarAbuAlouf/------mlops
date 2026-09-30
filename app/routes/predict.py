@@ -16,8 +16,8 @@ from app.schemas import (
     BatchOrderInput,
     BatchPredictionResponse,
     OrderInput,
-    PredictionResponse,
-)
+    PredictionResponse,)
+
 from src.features import order_dict_to_array, transform
 from src.logger import get_logger
 from src.predict import get_model_version, predict, predict_batch
@@ -31,8 +31,8 @@ router = APIRouter(tags=["Prediction"])
     "/predict",
     response_model=PredictionResponse,
     summary="Predict delivery delay for a single order",
-    status_code=status.HTTP_200_OK,
-)
+    status_code=status.HTTP_200_OK,)
+
 async def predict_order(order: OrderInput):
     """
     Predict whether a customer order will be delivered late (`is_late`).
@@ -48,8 +48,7 @@ async def predict_order(order: OrderInput):
         logger.warning("Validation rejected order %s: %s", order_id, exc)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={"error": "DataValidationError", "message": str(exc)},
-        )
+            detail={"error": "DataValidationError", "message": str(exc)},)
 
     try:
         # 2. Transform features using pre-fitted transformers
@@ -66,23 +65,21 @@ async def predict_order(order: OrderInput):
             threshold=pred_res["threshold"],
             model_version=pred_res["model_version"],
             validation_passed=is_valid,
-            warnings=issues,
-        )
+            warnings=issues,)
 
     except Exception as exc:
         logger.exception("Unexpected inference error for order %s: %s", order_id, exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Inference error: {str(exc)}",
-        )
+            detail=f"Inference error: {str(exc)}",)
 
 
 @router.post(
     "/predict/batch",
     response_model=BatchPredictionResponse,
     summary="Batch prediction for multiple orders",
-    status_code=status.HTTP_200_OK,
-)
+    status_code=status.HTTP_200_OK,)
+
 async def predict_orders_batch(batch: BatchOrderInput):
     """
     Predict delivery delay for multiple orders in a single request.
@@ -91,8 +88,7 @@ async def predict_orders_batch(batch: BatchOrderInput):
     if not batch.orders:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Order list cannot be empty",
-        )
+            detail="Order list cannot be empty",)
 
     orders_list = [o.model_dump() for o in batch.orders]
     df_raw = pd.DataFrame(orders_list)
@@ -103,8 +99,7 @@ async def predict_orders_batch(batch: BatchOrderInput):
     except DataValidationError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={"error": "DataValidationError", "message": str(exc)},
-        )
+            detail={"error": "DataValidationError", "message": str(exc)},)
 
     try:
         X_trans = transform(cleaned_df)
@@ -122,19 +117,15 @@ async def predict_orders_batch(batch: BatchOrderInput):
                     threshold=pred_res["threshold"],
                     model_version=pred_res["model_version"],
                     validation_passed=is_valid,
-                    warnings=issues if i == 0 else [],
-                )
-            )
+                    warnings=issues if i == 0 else [],))
 
         return BatchPredictionResponse(
             predictions=results,
             count=len(results),
-            model_version=get_model_version(),
-        )
+            model_version=get_model_version(),)
 
     except Exception as exc:
         logger.exception("Batch prediction failure: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Batch inference error: {str(exc)}",
-        )
+            detail=f"Batch inference error: {str(exc)}",)

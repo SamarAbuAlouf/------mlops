@@ -22,9 +22,7 @@ from typing import Any
 
 import yaml
 
-# ---------------------------------------------------------------------------
 # Load config once at module level
-# ---------------------------------------------------------------------------
 _ROOT = Path(__file__).parent.parent
 _CONFIG_PATH = _ROOT / "config" / "config.yaml"
 
@@ -63,9 +61,7 @@ if hasattr(sys.stderr, "reconfigure"):
     except Exception:
         pass
 
-# ---------------------------------------------------------------------------
 # Root logger configuration (done once)
-# ---------------------------------------------------------------------------
 stream_handler = logging.StreamHandler(sys.stdout)
 file_handler = logging.FileHandler(APP_LOG_FILE, encoding="utf-8")
 
@@ -84,9 +80,7 @@ def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(name)
 
 
-# ---------------------------------------------------------------------------
 # Prediction logger — writes one JSON line per request
-# ---------------------------------------------------------------------------
 class PredictionLogger:
     """
     Appends structured JSON logs for every prediction request.

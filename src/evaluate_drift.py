@@ -59,8 +59,8 @@ def analyze_prediction_logs(log_path: Path = PRED_LOG_PATH) -> dict:
     if drift_detected:
         alerts.append(
             f"PREDICTION DRIFT ALERT: Observed late rate ({observed_late_rate:.2%}) "
-            f"deviates significantly from baseline ({BASELINE_LATE_RATE:.2%})"
-        )
+            f"deviates significantly from baseline ({BASELINE_LATE_RATE:.2%})")
+        
     if p95_latency > 500.0:  # SLA threshold 500ms
         alerts.append(f"LATENCY SLA ALERT: p95 latency ({p95_latency:.1f}ms) exceeds 500ms SLA")
 
@@ -73,8 +73,7 @@ def analyze_prediction_logs(log_path: Path = PRED_LOG_PATH) -> dict:
         "avg_latency_ms": round(avg_latency, 2),
         "p95_latency_ms": round(p95_latency, 2),
         "alerts_triggered": alerts,
-        "status": "alert" if alerts else "healthy",
-    }
+        "status": "alert" if alerts else "healthy",}
 
     logger.info("Monitoring analysis complete: %s (Total: %d, Late rate: %.2f%%)",
                 report["status"], total_preds, observed_late_rate * 100)

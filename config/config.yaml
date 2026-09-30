@@ -1,16 +1,12 @@
-# =============================================================================
 # Olist Delivery Delay Prediction — Central Configuration
 # All paths and parameters live here; nothing is hardcoded in source files.
-# =============================================================================
 
 project:
   name: olist-delay-prediction
   version: "1.0.0"
   description: "MLOps Task 3 — Inference service for delivery delay prediction"
 
-# ---------------------------------------------------------------------------
 # Database (PostgreSQL inside Docker)
-# ---------------------------------------------------------------------------
 database:
   host: "${DB_HOST:localhost}"
   port: 5432
@@ -18,9 +14,7 @@ database:
   user: postgres
   # password comes from env var DB_PASSWORD (never hardcoded)
 
-# ---------------------------------------------------------------------------
 # Artifact paths (relative to project root)
-# ---------------------------------------------------------------------------
 artifacts:
   root: "artifacts"
   models_dir: "artifacts/models"
@@ -32,9 +26,7 @@ artifacts:
   final_model: "artifacts/models/final_model.joblib"
   feature_names: "artifacts/models/feature_names.json"
 
-# ---------------------------------------------------------------------------
 # MLflow tracking
-# ---------------------------------------------------------------------------
 mlflow:
   tracking_uri: "${MLFLOW_TRACKING_URI:http://localhost:5000}"
   experiment_name: "olist-delay-prediction"
@@ -42,18 +34,14 @@ mlflow:
   # Stage to load from registry (None means load latest version artifact)
   model_stage: "Production"
 
-# ---------------------------------------------------------------------------
 # Model inference
-# ---------------------------------------------------------------------------
 model:
   # Decision threshold tuned in Notebook 6
   threshold: 0.50
   # Expected feature count (16 numerical + 8 categorical = 24)
   expected_feature_count: 24
 
-# ---------------------------------------------------------------------------
 # FastAPI service
-# ---------------------------------------------------------------------------
 api:
   host: "0.0.0.0"
   port: 8000
@@ -61,9 +49,7 @@ api:
   description: "Predicts whether an order will be delivered late."
   version: "1.0.0"
 
-# ---------------------------------------------------------------------------
 # Logging
-# ---------------------------------------------------------------------------
 logging:
   level: "INFO"
   format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
@@ -71,9 +57,7 @@ logging:
   app_log_file: "logs/app.log"
   prediction_log_file: "logs/predictions.jsonl"
 
-# ---------------------------------------------------------------------------
 # Data validation (Great Expectations)
-# ---------------------------------------------------------------------------
 validation:
   # Action when validation fails: "reject" | "flag" | "default"
   on_failure: "flag"

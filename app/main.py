@@ -29,8 +29,7 @@ _METRICS = {
     "total_requests": 0,
     "predictions_count": 0,
     "errors_count": 0,
-    "latencies_ms": [],
-}
+    "latencies_ms": [],}
 
 
 @asynccontextmanager
@@ -56,8 +55,7 @@ app = FastAPI(
     version=CONFIG["api"]["version"],
     lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc",
-)
+    redoc_url="/redoc",)
 
 # CORS configuration
 app.add_middleware(
@@ -65,8 +63,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
-)
+    allow_headers=["*"],)
 
 
 @app.middleware("http")
@@ -88,8 +85,7 @@ async def monitor_requests(request: Request, call_next):
         logger.exception("Unhandled error on %s %s: %s", request.method, request.url.path, exc)
         return JSONResponse(
             status_code=500,
-            content={"detail": "Internal server error", "error": str(exc)},
-        )
+            content={"detail": "Internal server error", "error": str(exc)},)
 
 
 # Monitoring metrics route (Requirement 10)
@@ -112,8 +108,7 @@ async def get_metrics():
         "error_rate": round(_METRICS["errors_count"] / max(1, _METRICS["total_requests"]), 4),
         "avg_latency_ms": avg_lat,
         "p95_latency_ms": p95_lat,
-        "active_version": CONFIG["project"]["version"],
-    }
+        "active_version": CONFIG["project"]["version"],}
 
 
 # Include sub-routers
@@ -129,5 +124,4 @@ async def root():
         "version": CONFIG["api"]["version"],
         "docs": "/docs",
         "health": "/health",
-        "info": "/info",
-    }
+        "info": "/info",}

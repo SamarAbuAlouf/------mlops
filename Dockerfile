@@ -1,7 +1,5 @@
-# =============================================================================
 # Dockerfile — Olist Delivery Delay Prediction Inference Service
 # Lean, multi-stage or slim python container (no notebooks, no dev tools)
-# =============================================================================
 FROM python:3.11-slim as base
 
 # Prevents Python from writing pyc files to disk and buffering stdout/stderr

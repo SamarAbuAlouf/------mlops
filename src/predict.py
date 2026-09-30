@@ -23,9 +23,7 @@ from src.logger import PredictionLogger, get_logger
 logger = get_logger(__name__)
 _pred_logger = PredictionLogger()
 
-# ---------------------------------------------------------------------------
 # Model singleton
-# ---------------------------------------------------------------------------
 _model = None
 _loaded_model_version = MODEL_VERSION
 
@@ -71,9 +69,7 @@ def get_model_version() -> str:
     return _loaded_model_version
 
 
-# ---------------------------------------------------------------------------
 # Core prediction
-# ---------------------------------------------------------------------------
 def predict(X: np.ndarray, order_id: str | None = None) -> dict[str, Any]:
     """
     Run inference on a pre-transformed feature array.

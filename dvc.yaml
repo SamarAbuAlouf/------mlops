@@ -1,7 +1,5 @@
-# =============================================================================
 # DVC Pipeline Specification
 # Reproducible data and model pipeline stages
-# =============================================================================
 stages:
   inference_verify:
     cmd: python -c "from src.features import transform; from src.predict import predict; import pandas as pd; df=pd.read_parquet('artifacts/data/03_test.parquet').head(5); print(predict(transform(df)[:1]))"

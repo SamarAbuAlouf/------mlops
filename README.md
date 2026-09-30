@@ -1,5 +1,5 @@
-# 🚀 Olist E-Commerce Delivery Delay Prediction — End-to-End MLOps System
-## From Relational Database to Production Inference Service (Tasks 1, 2 & 3)
+#  Olist E-Commerce Delivery Delay Prediction — End-to-End MLOps System
+## From Relational Database to Production Inference Service
 
 [![CI/CD Pipeline](https://github.com/SamarAbuAlouf/MLOps-Olist-Delivery/actions/workflows/ci.yml/badge.svg)](https://github.com/SamarAbuAlouf/MLOps-Olist-Delivery/actions/workflows/ci.yml)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI_0.111-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com)
@@ -12,99 +12,7 @@ An enterprise-grade, reproducible Machine Learning Operations (MLOps) system bui
 
 ---
 
-## 🏗️ System Architecture
-
-```mermaid
-flowchart TD
-    subgraph Data Tier
-        DB[(PostgreSQL Database)] -->|SQLAlchemy Extract & Join| D01[01_joined_orders.parquet]
-        D01 -->|Target Definition| D02[02_labeled_orders.parquet]
-        D02 -->|Temporal 70/15/15 Split| D03[03_train/val/test.parquet]
-    end
-
-    subgraph Notebooks & ML Research
-        D03 -->|Train-Only EDA| NB4[04_exploratory_data_analysis.ipynb]
-        D03 -->|Anti-Leakage Feature Eng.| NB5[05_feature_engineering.ipynb]
-        NB5 -->|Fitted Preprocessor| P_ART[preprocessor.joblib]
-        NB5 -->|Model Tuning & Selection| NB6[06_train_tune_evaluate.ipynb]
-        NB6 -->|Champion Model| M_ART[final_model.joblib]
-    end
-
-    subgraph MLOps Production Tier
-        P_ART & M_ART -->|MLflow Registration| REG[MLflow Model Registry: Production]
-        D03 -->|Data & Pipeline Versioning| DVC_P[DVC: artifacts/data.dvc & dvc.yaml]
-        REG -->|Model Loader| P_PIPE[src/predict.py]
-        P_ART -->|Pure Transform| F_PIPE[src/features.py]
-        F_PIPE & P_PIPE --> API[FastAPI Service: app/main.py]
-        API -->|Request Validation| VAL[Great Expectations Validator: src/validation.py]
-        API -->|JSONL Audit Trail| AUDIT[(logs/predictions.jsonl)]
-        API -->|Prometheus Metrics| METRICS[/metrics]
-        AUDIT -->|Drift & Health Checks| DRIFT[src/evaluate_drift.py]
-    end
-
-    subgraph Deployment & Orchestration
-        API & DB & REG --> DOCKER[Docker Compose Multi-Container Stack]
-        DOCKER --> CICD[GitHub Actions CI/CD Pipeline]
-    end
-```
-
----
-
-## 📂 Repository Structure & Purpose of Each Folder
-
-```text
-├── app/                                    # 🌐 FastAPI Production Inference Application
-│   ├── main.py                             # API entry point, lifespan, CORS, telemetry middleware, /metrics
-│   ├── schemas.py                          # Pydantic v2 request & response schemas with OpenAPI examples
-│   └── routes/
-│       ├── health.py                       # GET /health — Liveness & readiness probes
-│       ├── info.py                         # GET /info — Active model type, version, features
-│       └── predict.py                      # POST /predict & /predict/batch with error handling
-├── config/                                 # ⚙️ Central Configuration (Zero Hardcoding)
-│   └── config.yaml                         # Central config: database, paths, threshold, validation rules
-├── src/                                    # 🧠 Refactored Production Python Modules
-│   ├── __init__.py                         # Package declaration
-│   ├── config.py                           # Dynamic YAML loader resolving ${ENV:default} variables
-│   ├── logger.py                           # Centralised logging (stdout + app.log + predictions.jsonl)
-│   ├── data.py                             # Database extract, Haversine distance, table aggregations
-│   ├── features.py                         # Pure feature engineering & ColumnTransformer loading
-│   ├── predict.py                          # Model singleton, MLflow registry loader, thresholding
-│   ├── validation.py                       # Great Expectations validator (reject / flag / default)
-│   ├── register_model.py                   # Script registering champion model to MLflow Production stage
-│   └── evaluate_drift.py                   # Prediction log analyzer for latency SLAs & drift detection
-├── tests/                                  # 🧪 Comprehensive Automated Pytest Suite (21 tests)
-│   ├── conftest.py                         # Pytest fixtures and mock payloads
-│   ├── test_preprocessing.py               # Unit tests for Haversine distances & table aggregations
-│   ├── test_features.py                    # Unit tests for feature ratios, regions, and transform shapes
-│   ├── test_data.py                        # Data tests: schema checks, range violations, target leakage
-│   ├── test_model.py                       # Model tests: probabilities in [0, 1], predict_proba methods
-│   └── test_api.py                         # Integration tests for all routes + intentional bad payload tests
-├── notebooks/                              # 📓 6 Self-Contained Research Notebooks (Task 2)
-│   ├── 01_read_and_join_tables.ipynb       # Database extraction, aggregation, Haversine distance
-│   ├── 02_create_labels.ipynb              # Target creation (is_late), class imbalance analysis
-│   ├── 03_train_val_test_split.ipynb       # Chronological/temporal train/val/test splitting
-│   ├── 04_exploratory_data_analysis.ipynb  # Train-only exploratory analysis & 8 charts
-│   ├── 05_feature_engineering.ipynb        # Anti-leakage features & fitted ColumnTransformer
-│   └── 06_train_tune_evaluate.ipynb         # Baselines vs Champion, threshold tuning, test evaluation
-├── artifacts/                              # 📦 Project Artifacts & Data Lineage
-│   ├── data/                               # Parquet datasets tracked by DVC (artifacts/data.dvc)
-│   ├── models/                             # Serialized models (final_model.joblib, preprocessor.joblib)
-│   ├── figures/                            # High-resolution EDA and evaluation plots
-│   └── reports/                            # Findings summaries, model metrics, monitoring plan
-├── .github/workflows/                      # 🤖 CI/CD Automation
-│   └── ci.yml                              # Linting (Ruff/Black), pytest coverage, and Docker build
-├── Dockerfile                              # 🐳 Lightweight production container for FastAPI service
-├── docker-compose.yml                      # 🐳 Orchestration: PostgreSQL + MLflow + FastAPI service
-├── dvc.yaml                                # 🗃️ Reproducible DVC pipeline stage definition
-├── .pre-commit-config.yaml                 # 🛡️ Pre-commit hooks for format, yaml, and secrets safety
-├── requirements.txt                        # 📌 Pinned runtime dependencies
-├── requirements-dev.txt                    # 🛠️ Pinned development and testing dependencies
-└── README.md                               # 📖 Full system documentation
-```
-
----
-
-## 🛠️ Tools Used & Why They Are Here
+##  Tools Used & Why They Are Here
 
 | Tool | Category | Why It Was Chosen |
 |---|---|---|
@@ -119,7 +27,7 @@ flowchart TD
 
 ---
 
-## ⚙️ Configuration & Environment Variables
+##  Configuration & Environment Variables
 
 All parameters and paths are defined in `config/config.yaml`. **No hardcoded paths or parameters exist in source files.**
 
@@ -131,7 +39,7 @@ Environment variables override configuration seamlessly:
 
 ---
 
-## 🚀 Quickstart: Running From Zero
+##  Quickstart: Running From Zero
 
 ### Option A: Complete Stack via Docker Compose (Recommended)
 To bring up PostgreSQL, MLflow, and the FastAPI Inference API in one command:
@@ -175,7 +83,7 @@ docker compose up -d --build
 
 ---
 
-## 📡 API Usage & Sample Requests
+##  API Usage & Sample Requests
 
 ### 1. Single Order Prediction (`POST /predict`)
 ```bash
@@ -243,7 +151,7 @@ curl -X POST "http://localhost:8000/predict/batch" \
 
 ---
 
-## 🔍 Validation & Error Handling (Definition of Done #4)
+##  Validation & Error Handling (Definition of Done #4)
 
 ### Breaking Something on Purpose:
 1. **Missing Mandatory Fields:**
@@ -285,7 +193,7 @@ curl -X POST "http://localhost:8000/predict/batch" \
 
 ---
 
-## 📊 Pipeline Reproducibility (Definition of Done #3)
+##  Pipeline Reproducibility (Definition of Done #3)
 
 The production inference pipeline (`src/features.py` + `src/predict.py`) loads the pre-fitted transformers without refitting and matches the Jupyter Notebook output **with 0.0 error**:
 
@@ -299,7 +207,7 @@ assert np.nanmax(diff) < 1e-6  # Max difference is exactly 0.0!
 
 ---
 
-## 📈 Monitoring & Drift Detection (Requirement 10)
+##  Monitoring & Drift Detection (Requirement 10)
 
 1. **Structured Prediction Audit Trail:**
    Every prediction request is logged to `logs/predictions.jsonl` with latency, prediction, probability, and timestamp.
@@ -312,7 +220,7 @@ assert np.nanmax(diff) < 1e-6  # Max difference is exactly 0.0!
 
 ---
 
-## 🏆 Model Performance Summary (Holdout Test Set)
+##  Model Performance Summary (Holdout Test Set)
 
 | Metric | Champion Model (HistGradientBoosting) | Baseline (Balanced Logistic Regression) |
 |---|---|---|
@@ -323,14 +231,3 @@ assert np.nanmax(diff) < 1e-6  # Max difference is exactly 0.0!
 | **F1-Score** | **0.1825** | 0.1770 |
 
 ---
-
-## ✅ Definition of Done Checklist
-
-- [x] **1. Structured Repository:** Clean separation of `app/`, `config/`, `src/`, `tests/`, `notebooks/`, `artifacts/`, requirements files, and zero hardcoded paths.
-- [x] **2. Modular Inference Pipeline:** Functions for data access, feature extraction, pre-fitted transformer loading, and threshold inference.
-- [x] **3. Data & Model Lineage:** DVC versioning (`artifacts/data.dvc` & `dvc.yaml`), Great Expectations validation, and MLflow Model Registry tracking with `Production` stage.
-- [x] **4. Automated Pytest Suite:** 21 passing unit, data, model, and API integration tests.
-- [x] **5. Production FastAPI Service:** Endpoints for `/health`, `/info`, `/predict`, `/predict/batch`, and `/metrics`.
-- [x] **6. Containerization:** Multi-service `docker-compose.yml` orchestrating PostgreSQL, MLflow, and FastAPI.
-- [x] **7. Automated CI/CD:** GitHub Actions workflow executing linting, test suites with coverage, and Docker image build.
-- [x] **8. Monitoring & Drift Logging:** JSONL prediction audit logs, telemetry metrics endpoint, and alerting strategy.

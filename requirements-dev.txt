@@ -1,6 +1,4 @@
-# ============================================================
 # Development-only requirements (NOT in Docker image)
-# ============================================================
 -r requirements.txt
 
 # Testing

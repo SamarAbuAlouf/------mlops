@@ -1,16 +1,14 @@
-# =============================================================================
 # Docker Compose — Complete MLOps Serving Stack
 # Database (PostgreSQL) + Experiment Store (MLflow) + Prediction Service (FastAPI)
 #
 # Usage:
 #   docker compose up -d --build
-# =============================================================================
 version: "3.8"
 
 services:
-  # ---------------------------------------------------------------------------
+  
   # 1. PostgreSQL Database Service
-  # ---------------------------------------------------------------------------
+  
   db:
     image: postgres:15-alpine
     container_name: olist-db
@@ -31,9 +29,9 @@ services:
       timeout: 5s
       retries: 5
 
-  # ---------------------------------------------------------------------------
+  
   # 2. MLflow Tracking Server & Artifact Store
-  # ---------------------------------------------------------------------------
+  
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.14.1
     container_name: olist-mlflow
@@ -54,9 +52,9 @@ services:
     networks:
       - olist-net
 
-  # ---------------------------------------------------------------------------
+  
   # 3. FastAPI Prediction Service
-  # ---------------------------------------------------------------------------
+  
   api:
     build:
       context: .
@@ -78,9 +76,9 @@ services:
     networks:
       - olist-net
 
-# ---------------------------------------------------------------------------
+
 # Networks and Volumes
-# ---------------------------------------------------------------------------
+
 networks:
   olist-net:
     driver: bridge

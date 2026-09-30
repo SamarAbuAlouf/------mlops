@@ -35,29 +35,24 @@ STATE_TO_REGION = {
     # North
     'AM': 'North', 'PA': 'North', 'RO': 'North', 'TO': 'North', 'AC': 'North', 'AP': 'North', 'RR': 'North',
     # Center-West
-    'GO': 'Center-West', 'MT': 'Center-West', 'MS': 'Center-West', 'DF': 'Center-West'
-}
+    'GO': 'Center-West', 'MT': 'Center-West', 'MS': 'Center-West', 'DF': 'Center-West'}
 
 NUMERICAL_FEATURES = [
     "order_items_count", "total_price", "total_freight", "total_weight_g",
     "total_volume_cm3", "total_payment_value", "max_payment_installments",
     "distance_km", "estimated_delivery_days", "purchase_month",
     "purchase_dayofweek", "purchase_hour", "freight_ratio",
-    "freight_per_item", "price_per_item", "density_g_cm3",
-]
+    "freight_per_item", "price_per_item", "density_g_cm3",]
 
 CATEGORICAL_FEATURES = [
     "customer_state", "seller_state", "dominant_payment_type",
     "customer_region", "seller_region", "is_same_state",
-    "is_inter_region", "purchase_is_weekend",
-]
+    "is_inter_region", "purchase_is_weekend",]
 
 ALL_FEATURES = NUMERICAL_FEATURES + CATEGORICAL_FEATURES
 
 
-# ---------------------------------------------------------------------------
 # Feature engineering (pure transformation, no fitting)
-# ---------------------------------------------------------------------------
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add engineered columns to an order DataFrame.
@@ -112,9 +107,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-# ---------------------------------------------------------------------------
 # Preprocessor loader (singleton)
-# ---------------------------------------------------------------------------
 _preprocessor = None
 _feature_names: list[str] | None = None
 
@@ -139,9 +132,7 @@ def load_feature_names(path: Path = FEATURE_NAMES_PATH) -> list[str]:
     return _feature_names
 
 
-# ---------------------------------------------------------------------------
 # Transform a DataFrame to the model-ready numpy array
-# ---------------------------------------------------------------------------
 def transform(df: pd.DataFrame) -> np.ndarray:
     """
     Run feature engineering + preprocessor on a raw order DataFrame.
@@ -167,9 +158,7 @@ def transform(df: pd.DataFrame) -> np.ndarray:
     return X_transformed
 
 
-# ---------------------------------------------------------------------------
 # Single-order dict → transformed array (for API use)
-# ---------------------------------------------------------------------------
 def order_dict_to_array(order: dict[str, Any]) -> np.ndarray:
     """
     Convert a single order dict (from API request) to a transformed array.

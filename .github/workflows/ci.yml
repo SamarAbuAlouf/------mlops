@@ -1,7 +1,5 @@
-# =============================================================================
 # GitHub Actions CI/CD Pipeline
-# Runs on every push and pull request to ensure code quality and reproducibility.
-# =============================================================================
+# Runs on every push and pull request to ensure code quality and reproducibility
 name: MLOps CI/CD Pipeline
 
 on:
@@ -11,9 +9,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  # ---------------------------------------------------------------------------
   # 1. Quality checks and automated test execution
-  # ---------------------------------------------------------------------------
   test:
     name: Code Quality & Automated Tests
     runs-on: ubuntu-latest
@@ -43,9 +39,8 @@ jobs:
         run: |
           pytest -v --cov=src --cov=app --cov-report=term-missing tests/
 
-  # ---------------------------------------------------------------------------
+
   # 2. Container image build
-  # ---------------------------------------------------------------------------
   build-container:
     name: Build Docker Container
     needs: test
