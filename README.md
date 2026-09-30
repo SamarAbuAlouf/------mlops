@@ -86,18 +86,3 @@ Verified via automated test:
 diff = np.abs(X_test_transformed - X_saved)
 assert np.nanmax(diff) < 1e-6  # Max difference is exactly 0.0!
 ```
-
----
-
-##  Monitoring & Drift Detection 
-
-1. **Structured Prediction Audit Trail:**
-   Every prediction request is logged to `logs/predictions.jsonl` with latency, prediction, probability, and timestamp.
-2. **Real-Time Telemetry:**
-   Access `GET /metrics` for real-time error rates, request counts, average latency, and p95 latency.
-3. **Drift Analyzer:**
-   Run `python -m src.evaluate_drift` to compute observed late rates vs. baseline (9.03%) and detect concept drift.
-4. **Monitoring Plan:**
-   Detailed alerting thresholds and SLOs documented in [artifacts/reports/monitoring_plan.md](artifacts/reports/monitoring_plan.md).
-
----
