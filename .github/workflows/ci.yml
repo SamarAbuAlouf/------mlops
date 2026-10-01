@@ -4,15 +4,18 @@ name: MLOps CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   # 1. Quality checks and automated test execution
   test:
     name: Code Quality & Automated Tests
     runs-on: ubuntu-latest
+
+    env:
+      PYTHONPATH: .
 
     steps:
       - name: Check out repository
@@ -27,17 +30,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
 
       - name: Lint and format checks
         run: |
-          ruff check .
-          black --check src app tests
+          python -m ruff check .
+          python -m black --check src app tests
 
       - name: Run pytest test suite (A failing test stops the pipeline!)
         run: |
-          pytest -v --cov=src --cov=app --cov-report=term-missing tests/
+          python -m pytest -v --cov=src --cov=app --cov-report=term-missing tests/
 
 
   # 2. Container image build
