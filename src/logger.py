@@ -10,6 +10,7 @@ Usage:
 Requirement 3: Use the logging library, not print statements.
 Log levels, log format, log to file and to console.
 """
+
 from __future__ import annotations
 
 import json
@@ -26,6 +27,7 @@ import yaml
 _ROOT = Path(__file__).parent.parent
 _CONFIG_PATH = _ROOT / "config" / "config.yaml"
 
+
 def _load_log_config() -> dict:
     """Load logging section from config.yaml."""
     try:
@@ -34,6 +36,7 @@ def _load_log_config() -> dict:
         return cfg.get("logging", {})
     except Exception:
         return {}
+
 
 _log_cfg = _load_log_config()
 

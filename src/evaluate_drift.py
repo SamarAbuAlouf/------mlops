@@ -8,6 +8,7 @@ Requirement 10:
 - Detects concept and prediction drift against training baseline
 - Implements alerting thresholds
 """
+
 from __future__ import annotations
 
 import json
@@ -21,14 +22,19 @@ logger = get_logger(__name__)
 
 # Baseline training delay rate from Notebook 02/03
 BASELINE_LATE_RATE = 0.0903  # 9.03%
-PRED_LOG_PATH = Path(CONFIG.get("logging", {}).get("prediction_log_file", "logs/predictions.jsonl"))
+PRED_LOG_PATH = Path(
+    CONFIG.get("logging", {}).get("prediction_log_file", "logs/predictions.jsonl")
+)
 
 
 def analyze_prediction_logs(log_path: Path = PRED_LOG_PATH) -> dict:
     """Analyze logged predictions and check for drift/anomalies."""
     if not log_path.exists():
         logger.warning("No prediction log found at %s", log_path)
-        return {"status": "no_data", "message": f"Log file {log_path} does not exist yet."}
+        return {
+            "status": "no_data",
+            "message": f"Log file {log_path} does not exist yet.",
+        }
 
     records = []
     with open(log_path, "r", encoding="utf-8") as f:
@@ -58,10 +64,13 @@ def analyze_prediction_logs(log_path: Path = PRED_LOG_PATH) -> dict:
     if drift_detected:
         alerts.append(
             f"PREDICTION DRIFT ALERT: Observed late rate ({observed_late_rate:.2%}) "
-            f"deviates significantly from baseline ({BASELINE_LATE_RATE:.2%})")
-        
+            f"deviates significantly from baseline ({BASELINE_LATE_RATE:.2%})"
+        )
+
     if p95_latency > 500.0:  # SLA threshold 500ms
-        alerts.append(f"LATENCY SLA ALERT: p95 latency ({p95_latency:.1f}ms) exceeds 500ms SLA")
+        alerts.append(
+            f"LATENCY SLA ALERT: p95 latency ({p95_latency:.1f}ms) exceeds 500ms SLA"
+        )
 
     report = {
         "total_logged_predictions": total_preds,
@@ -72,10 +81,15 @@ def analyze_prediction_logs(log_path: Path = PRED_LOG_PATH) -> dict:
         "avg_latency_ms": round(avg_latency, 2),
         "p95_latency_ms": round(p95_latency, 2),
         "alerts_triggered": alerts,
-        "status": "alert" if alerts else "healthy",}
+        "status": "alert" if alerts else "healthy",
+    }
 
-    logger.info("Monitoring analysis complete: %s (Total: %d, Late rate: %.2f%%)",
-                report["status"], total_preds, observed_late_rate * 100)
+    logger.info(
+        "Monitoring analysis complete: %s (Total: %d, Late rate: %.2f%%)",
+        report["status"],
+        total_preds,
+        observed_late_rate * 100,
+    )
     return report
 
 

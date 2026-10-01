@@ -8,6 +8,7 @@ Responsibility: Given a raw order row (or DataFrame of rows), compute the
 Key rule: The preprocessor is LOADED, never re-fitted here.
 (Requirement 2: Load the saved fitted objects — never fit again at inference)
 """
+
 from __future__ import annotations
 
 import json
@@ -26,28 +27,68 @@ logger = get_logger(__name__)
 # Brazilian macro-regions mapping (exact match with Notebook 05)
 STATE_TO_REGION = {
     # Southeast
-    'SP': 'Southeast', 'RJ': 'Southeast', 'MG': 'Southeast', 'ES': 'Southeast',
+    "SP": "Southeast",
+    "RJ": "Southeast",
+    "MG": "Southeast",
+    "ES": "Southeast",
     # South
-    'PR': 'South', 'SC': 'South', 'RS': 'South',
+    "PR": "South",
+    "SC": "South",
+    "RS": "South",
     # Northeast
-    'BA': 'Northeast', 'PE': 'Northeast', 'CE': 'Northeast', 'MA': 'Northeast',
-    'PB': 'Northeast', 'RN': 'Northeast', 'AL': 'Northeast', 'PI': 'Northeast', 'SE': 'Northeast',
+    "BA": "Northeast",
+    "PE": "Northeast",
+    "CE": "Northeast",
+    "MA": "Northeast",
+    "PB": "Northeast",
+    "RN": "Northeast",
+    "AL": "Northeast",
+    "PI": "Northeast",
+    "SE": "Northeast",
     # North
-    'AM': 'North', 'PA': 'North', 'RO': 'North', 'TO': 'North', 'AC': 'North', 'AP': 'North', 'RR': 'North',
+    "AM": "North",
+    "PA": "North",
+    "RO": "North",
+    "TO": "North",
+    "AC": "North",
+    "AP": "North",
+    "RR": "North",
     # Center-West
-    'GO': 'Center-West', 'MT': 'Center-West', 'MS': 'Center-West', 'DF': 'Center-West'}
+    "GO": "Center-West",
+    "MT": "Center-West",
+    "MS": "Center-West",
+    "DF": "Center-West",
+}
 
 NUMERICAL_FEATURES = [
-    "order_items_count", "total_price", "total_freight", "total_weight_g",
-    "total_volume_cm3", "total_payment_value", "max_payment_installments",
-    "distance_km", "estimated_delivery_days", "purchase_month",
-    "purchase_dayofweek", "purchase_hour", "freight_ratio",
-    "freight_per_item", "price_per_item", "density_g_cm3",]
+    "order_items_count",
+    "total_price",
+    "total_freight",
+    "total_weight_g",
+    "total_volume_cm3",
+    "total_payment_value",
+    "max_payment_installments",
+    "distance_km",
+    "estimated_delivery_days",
+    "purchase_month",
+    "purchase_dayofweek",
+    "purchase_hour",
+    "freight_ratio",
+    "freight_per_item",
+    "price_per_item",
+    "density_g_cm3",
+]
 
 CATEGORICAL_FEATURES = [
-    "customer_state", "seller_state", "dominant_payment_type",
-    "customer_region", "seller_region", "is_same_state",
-    "is_inter_region", "purchase_is_weekend",]
+    "customer_state",
+    "seller_state",
+    "dominant_payment_type",
+    "customer_region",
+    "seller_region",
+    "is_same_state",
+    "is_inter_region",
+    "purchase_is_weekend",
+]
 
 ALL_FEATURES = NUMERICAL_FEATURES + CATEGORICAL_FEATURES
 
@@ -62,13 +103,23 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # 1. Datetime conversions
     if "order_purchase_timestamp" in data.columns:
-        data["order_purchase_timestamp"] = pd.to_datetime(data["order_purchase_timestamp"], errors="coerce")
+        data["order_purchase_timestamp"] = pd.to_datetime(
+            data["order_purchase_timestamp"], errors="coerce"
+        )
     if "order_estimated_delivery_date" in data.columns:
-        data["order_estimated_delivery_date"] = pd.to_datetime(data["order_estimated_delivery_date"], errors="coerce")
+        data["order_estimated_delivery_date"] = pd.to_datetime(
+            data["order_estimated_delivery_date"], errors="coerce"
+        )
 
     # 2. Promised lead time in days (if not already provided)
-    if "estimated_delivery_days" not in data.columns or data["estimated_delivery_days"].isna().all():
-        if "order_estimated_delivery_date" in data.columns and "order_purchase_timestamp" in data.columns:
+    if (
+        "estimated_delivery_days" not in data.columns
+        or data["estimated_delivery_days"].isna().all()
+    ):
+        if (
+            "order_estimated_delivery_date" in data.columns
+            and "order_purchase_timestamp" in data.columns
+        ):
             data["estimated_delivery_days"] = (
                 data["order_estimated_delivery_date"] - data["order_purchase_timestamp"]
             ).dt.total_seconds() / 86400.0
@@ -78,30 +129,46 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
         data["purchase_month"] = data["order_purchase_timestamp"].dt.month
         data["purchase_dayofweek"] = data["order_purchase_timestamp"].dt.dayofweek
         data["purchase_hour"] = data["order_purchase_timestamp"].dt.hour
-        data["purchase_is_weekend"] = data["purchase_dayofweek"].isin([5, 6]).astype(int)
+        data["purchase_is_weekend"] = (
+            data["purchase_dayofweek"].isin([5, 6]).astype(int)
+        )
 
     # 4. Freight and pricing ratios (safe with Notebook 05 constants)
     if "total_freight" in data.columns and "total_price" in data.columns:
         data["freight_ratio"] = data["total_freight"] / (data["total_price"] + 1.0)
     if "total_freight" in data.columns and "order_items_count" in data.columns:
-        data["freight_per_item"] = data["total_freight"] / (data["order_items_count"] + 1e-5)
+        data["freight_per_item"] = data["total_freight"] / (
+            data["order_items_count"] + 1e-5
+        )
     if "total_price" in data.columns and "order_items_count" in data.columns:
-        data["price_per_item"] = data["total_price"] / (data["order_items_count"] + 1e-5)
+        data["price_per_item"] = data["total_price"] / (
+            data["order_items_count"] + 1e-5
+        )
 
     # 5. Density (weight / volume)
     if "total_weight_g" in data.columns and "total_volume_cm3" in data.columns:
-        data["density_g_cm3"] = data["total_weight_g"] / (data["total_volume_cm3"] + 1.0)
+        data["density_g_cm3"] = data["total_weight_g"] / (
+            data["total_volume_cm3"] + 1.0
+        )
 
     # 6. Macro-regions & cross-region flags
     if "customer_state" in data.columns:
-        data["customer_region"] = data["customer_state"].map(STATE_TO_REGION).fillna("Other")
+        data["customer_region"] = (
+            data["customer_state"].map(STATE_TO_REGION).fillna("Other")
+        )
     if "seller_state" in data.columns:
-        data["seller_region"] = data["seller_state"].map(STATE_TO_REGION).fillna("Other")
+        data["seller_region"] = (
+            data["seller_state"].map(STATE_TO_REGION).fillna("Other")
+        )
 
     if "customer_region" in data.columns and "seller_region" in data.columns:
-        data["is_inter_region"] = (data["customer_region"] != data["seller_region"]).astype(int)
+        data["is_inter_region"] = (
+            data["customer_region"] != data["seller_region"]
+        ).astype(int)
     if "customer_state" in data.columns and "seller_state" in data.columns:
-        data["is_same_state"] = (data["customer_state"] == data["seller_state"]).astype(int)
+        data["is_same_state"] = (data["customer_state"] == data["seller_state"]).astype(
+            int
+        )
 
     logger.debug("Feature engineering done: %d rows", len(data))
     return data

@@ -8,6 +8,7 @@ Requirements 7, 8, 10:
 - Integrates health, info, and predict routers
 - Loads model at startup
 """
+
 from __future__ import annotations
 
 import time
@@ -29,7 +30,8 @@ _METRICS = {
     "total_requests": 0,
     "predictions_count": 0,
     "errors_count": 0,
-    "latencies_ms": [],}
+    "latencies_ms": [],
+}
 
 
 @asynccontextmanager
@@ -55,7 +57,8 @@ app = FastAPI(
     version=CONFIG["api"]["version"],
     lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc",)
+    redoc_url="/redoc",
+)
 
 # CORS configuration
 app.add_middleware(
@@ -63,7 +66,8 @@ app.add_middleware(
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],)
+    allow_headers=["*"],
+)
 
 
 @app.middleware("http")
@@ -82,10 +86,13 @@ async def monitor_requests(request: Request, call_next):
     except Exception as exc:
         _METRICS["errors_count"] += 1
         latency = (time.perf_counter() - t0) * 1000
-        logger.exception("Unhandled error on %s %s: %s", request.method, request.url.path, exc)
+        logger.exception(
+            "Unhandled error on %s %s: %s", request.method, request.url.path, exc
+        )
         return JSONResponse(
             status_code=500,
-            content={"detail": "Internal server error", "error": str(exc)},)
+            content={"detail": "Internal server error", "error": str(exc)},
+        )
 
 
 # Monitoring metrics route (Requirement 10)
@@ -100,15 +107,20 @@ async def get_metrics():
     """
     lats = _METRICS["latencies_ms"]
     avg_lat = round(sum(lats) / len(lats), 2) if lats else 0.0
-    p95_lat = round(sorted(lats)[int(0.95 * len(lats))], 2) if len(lats) >= 20 else avg_lat
+    p95_lat = (
+        round(sorted(lats)[int(0.95 * len(lats))], 2) if len(lats) >= 20 else avg_lat
+    )
 
     return {
         "total_requests": _METRICS["total_requests"],
         "errors_count": _METRICS["errors_count"],
-        "error_rate": round(_METRICS["errors_count"] / max(1, _METRICS["total_requests"]), 4),
+        "error_rate": round(
+            _METRICS["errors_count"] / max(1, _METRICS["total_requests"]), 4
+        ),
         "avg_latency_ms": avg_lat,
         "p95_latency_ms": p95_lat,
-        "active_version": CONFIG["project"]["version"],}
+        "active_version": CONFIG["project"]["version"],
+    }
 
 
 # Include sub-routers
@@ -124,4 +136,5 @@ async def root():
         "version": CONFIG["api"]["version"],
         "docs": "/docs",
         "health": "/health",
-        "info": "/info",}
+        "info": "/info",
+    }

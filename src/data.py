@@ -7,6 +7,7 @@ geographic features. Returns a single DataFrame per order.
 
 Requirement 2: Separate concerns — data access is isolated here.
 """
+
 from __future__ import annotations
 
 import math
@@ -27,7 +28,10 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     phi1, phi2 = math.radians(lat1), math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
     dlam = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+    a = (
+        math.sin(dphi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+    )
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
@@ -101,8 +105,10 @@ def aggregate_order_items(items: pd.DataFrame) -> pd.DataFrame:
             total_weight_g=("product_weight_g", "sum"),
             total_volume_cm3=("product_volume_cm3", "sum"),
             seller_id=("seller_id", "first"),
-            product_id=("product_id", "first"),)
-        .reset_index())
+            product_id=("product_id", "first"),
+        )
+        .reset_index()
+    )
 
 
 def aggregate_payments(payments: pd.DataFrame) -> pd.DataFrame:
@@ -113,8 +119,10 @@ def aggregate_payments(payments: pd.DataFrame) -> pd.DataFrame:
         .agg(
             total_payment_value=("payment_value", "sum"),
             max_payment_installments=("payment_installments", "max"),
-            dominant_payment_type=("payment_type", lambda x: x.value_counts().index[0]),)
-        .reset_index())
+            dominant_payment_type=("payment_type", lambda x: x.value_counts().index[0]),
+        )
+        .reset_index()
+    )
     return agg
 
 
@@ -122,15 +130,19 @@ def build_geo_lookup(geo: pd.DataFrame) -> pd.DataFrame:
     """Return one (lat, lon) per zip_code_prefix (deduplicated median)."""
     logger.debug("Building geolocation lookup …")
     return (
-        geo.groupby("geolocation_zip_code_prefix")
-        [["geolocation_lat", "geolocation_lng"]]
+        geo.groupby("geolocation_zip_code_prefix")[
+            ["geolocation_lat", "geolocation_lng"]
+        ]
         .median()
         .reset_index()
         .rename(
             columns={
                 "geolocation_zip_code_prefix": "zip_prefix",
                 "geolocation_lat": "lat",
-                "geolocation_lng": "lng",}))
+                "geolocation_lng": "lng",
+            }
+        )
+    )
 
 
 # Master join — replicates Notebook 01 end-to-end
@@ -159,33 +171,43 @@ def build_joined_dataframe(engine=None) -> pd.DataFrame:
     products["product_volume_cm3"] = (
         products["product_length_cm"]
         * products["product_height_cm"]
-        * products["product_width_cm"])
+        * products["product_width_cm"]
+    )
 
     # Join items with products
     items_agg = items_agg.merge(
         products[["product_id", "product_volume_cm3"]],
         on="product_id",
-        how="left",)
+        how="left",
+    )
     # Fix total_volume_cm3 using actual product volume
     items_full = items.merge(
         products[["product_id", "product_volume_cm3"]],
         on="product_id",
-        how="left",)
+        how="left",
+    )
     vol_per_order = (
-        items_full.groupby("order_id")["product_volume_cm3"].sum().reset_index()
-        .rename(columns={"product_volume_cm3": "total_volume_cm3_recalc"}))
-    
+        items_full.groupby("order_id")["product_volume_cm3"]
+        .sum()
+        .reset_index()
+        .rename(columns={"product_volume_cm3": "total_volume_cm3_recalc"})
+    )
+
     items_agg = items_agg.merge(vol_per_order, on="order_id", how="left")
     items_agg["total_volume_cm3"] = items_agg["total_volume_cm3_recalc"].fillna(
-        items_agg["total_volume_cm3"])
-    items_agg.drop(columns=["total_volume_cm3_recalc", "product_id"], inplace=True, errors="ignore")
+        items_agg["total_volume_cm3"]
+    )
+    items_agg.drop(
+        columns=["total_volume_cm3_recalc", "product_id"], inplace=True, errors="ignore"
+    )
 
     # Join sellers with geo
     sellers = sellers.merge(
         geo_lookup,
         left_on="seller_zip_code_prefix",
         right_on="zip_prefix",
-        how="left",).rename(columns={"lat": "seller_lat", "lng": "seller_lng"})
+        how="left",
+    ).rename(columns={"lat": "seller_lat", "lng": "seller_lng"})
 
     # Join customers with geo
     customers = customers.merge(
@@ -199,14 +221,21 @@ def build_joined_dataframe(engine=None) -> pd.DataFrame:
     items_agg = items_agg.merge(
         sellers[["seller_id", "seller_state", "seller_lat", "seller_lng"]],
         on="seller_id",
-        how="left",)
+        how="left",
+    )
 
     # Master join
     df = (
-        orders
-        .merge(customers[["customer_id", "customer_state", "customer_lat", "customer_lng"]], on="customer_id", how="left")
+        orders.merge(
+            customers[
+                ["customer_id", "customer_state", "customer_lat", "customer_lng"]
+            ],
+            on="customer_id",
+            how="left",
+        )
         .merge(items_agg, on="order_id", how="left")
-        .merge(payments_agg, on="order_id", how="left"))
+        .merge(payments_agg, on="order_id", how="left")
+    )
 
     # Parse timestamps
     ts_cols = [
@@ -214,26 +243,41 @@ def build_joined_dataframe(engine=None) -> pd.DataFrame:
         "order_approved_at",
         "order_delivered_carrier_date",
         "order_delivered_customer_date",
-        "order_estimated_delivery_date",]
+        "order_estimated_delivery_date",
+    ]
     for col in ts_cols:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors="coerce")
 
     # Compute derived columns
     df["estimated_delivery_days"] = (
-        df["order_estimated_delivery_date"] - df["order_purchase_timestamp"]).dt.days
+        df["order_estimated_delivery_date"] - df["order_purchase_timestamp"]
+    ).dt.days
 
-    df["is_same_state"] = (
-        (df["customer_state"] == df["seller_state"]).astype(int))
+    df["is_same_state"] = (df["customer_state"] == df["seller_state"]).astype(int)
 
     df["distance_km"] = df.apply(
-        lambda r: haversine_km(
-            r["customer_lat"], r["customer_lng"],
-            r["seller_lat"], r["seller_lng"],)
-
-        if all(pd.notna([r["customer_lat"], r["customer_lng"], r["seller_lat"], r["seller_lng"]]))
-        else float("nan"),
-        axis=1,)
+        lambda r: (
+            haversine_km(
+                r["customer_lat"],
+                r["customer_lng"],
+                r["seller_lat"],
+                r["seller_lng"],
+            )
+            if all(
+                pd.notna(
+                    [
+                        r["customer_lat"],
+                        r["customer_lng"],
+                        r["seller_lat"],
+                        r["seller_lng"],
+                    ]
+                )
+            )
+            else float("nan")
+        ),
+        axis=1,
+    )
 
     logger.info("Joined DataFrame: %d rows, %d cols", len(df), len(df.columns))
     return df

@@ -2,6 +2,7 @@
 app/routes/health.py
 Health check endpoint.
 """
+
 from datetime import datetime, timezone
 from fastapi import APIRouter
 

@@ -8,6 +8,7 @@ and returns a structured result dict.
 Requirement 2: Load saved fitted objects — never re-fit at inference.
 Requirement 5: Service loads model from registry or artifact store.
 """
+
 from __future__ import annotations
 
 import time
@@ -17,7 +18,13 @@ from typing import Any
 import joblib
 import numpy as np
 
-from src.config import MODEL_PATH, MODEL_THRESHOLD, MODEL_VERSION, MLFLOW_URI, MLFLOW_MODEL_NAME
+from src.config import (
+    MODEL_PATH,
+    MODEL_THRESHOLD,
+    MODEL_VERSION,
+    MLFLOW_URI,
+    MLFLOW_MODEL_NAME,
+)
 from src.logger import PredictionLogger, get_logger
 
 logger = get_logger(__name__)
@@ -35,7 +42,9 @@ def load_model(path: Path = MODEL_PATH):
         logger.info("Loading model from %s", path)
         _model = joblib.load(path)
         _loaded_model_version = MODEL_VERSION
-        logger.info("Model loaded: %s v%s", type(_model).__name__, _loaded_model_version)
+        logger.info(
+            "Model loaded: %s v%s", type(_model).__name__, _loaded_model_version
+        )
     return _model
 
 
@@ -48,6 +57,7 @@ def try_load_from_mlflow() -> bool:
     global _model, _loaded_model_version
     try:
         import mlflow
+
         mlflow.set_tracking_uri(MLFLOW_URI)
         client = mlflow.tracking.MlflowClient()
         versions = client.get_latest_versions(MLFLOW_MODEL_NAME, stages=["Production"])
@@ -55,9 +65,13 @@ def try_load_from_mlflow() -> bool:
             v = versions[0]
             logger.info(
                 "Loading model from MLflow registry: %s v%s (run_id=%s)",
-                MLFLOW_MODEL_NAME, v.version, v.run_id,
+                MLFLOW_MODEL_NAME,
+                v.version,
+                v.run_id,
             )
-            _model = mlflow.sklearn.load_model(f"models:/{MLFLOW_MODEL_NAME}/Production")
+            _model = mlflow.sklearn.load_model(
+                f"models:/{MLFLOW_MODEL_NAME}/Production"
+            )
             _loaded_model_version = f"mlflow-v{v.version}"
             return True
     except Exception as exc:

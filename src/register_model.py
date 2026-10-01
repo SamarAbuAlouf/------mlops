@@ -8,6 +8,7 @@ Requirement 5:
 - Register the chosen model with version and stage
 - Allows service to load model from registry
 """
+
 from __future__ import annotations
 
 import json
@@ -60,7 +61,9 @@ def register_champion_model():
     logger.info("Loading model from %s", MODEL_PATH)
     model = joblib.load(MODEL_PATH)
 
-    with mlflow.start_run(experiment_id=exp_id, run_name=f"champion-{MODEL_VERSION}") as run:
+    with mlflow.start_run(
+        experiment_id=exp_id, run_name=f"champion-{MODEL_VERSION}"
+    ) as run:
         run_id = run.info.run_id
         logger.info("Started MLflow run: %s", run_id)
 
@@ -83,7 +86,9 @@ def register_champion_model():
         mlflow.log_artifact(str(PREPROCESSOR_PATH), artifact_path="preprocessor")
         mlflow.log_artifact(str(FEATURE_NAMES_PATH), artifact_path="metadata")
         if Path("artifacts/reports/model_results.md").exists():
-            mlflow.log_artifact("artifacts/reports/model_results.md", artifact_path="reports")
+            mlflow.log_artifact(
+                "artifacts/reports/model_results.md", artifact_path="reports"
+            )
 
         # Log model & register
         logger.info("Registering model as '%s'...", MLFLOW_MODEL_NAME)
@@ -99,7 +104,9 @@ def register_champion_model():
         latest_versions = client.get_latest_versions(MLFLOW_MODEL_NAME)
         if latest_versions:
             latest_version = latest_versions[-1].version
-            logger.info("Transitioning model version %s to 'Production' stage", latest_version)
+            logger.info(
+                "Transitioning model version %s to 'Production' stage", latest_version
+            )
             client.transition_model_version_stage(
                 name=MLFLOW_MODEL_NAME,
                 version=latest_version,

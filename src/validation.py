@@ -7,6 +7,7 @@ Requirement 4:
 - Define expectations: column types, ranges, allowed categories, missing rates
 - Configurable action on failure: "reject" | "flag" | "default"
 """
+
 from __future__ import annotations
 
 from typing import Any, List, Tuple
@@ -27,6 +28,7 @@ CATEGORICAL_ALLOWED: dict[str, list[Any]] = _VAL_CFG.get("categorical_allowed", 
 
 class DataValidationError(ValueError):
     """Raised when data fails validation under 'reject' policy."""
+
     pass
 
 
@@ -53,7 +55,9 @@ class DataValidator:
         self.categorical_allowed = categorical_allowed or CATEGORICAL_ALLOWED
         self.max_missing_rate = max_missing_rate
 
-    def validate(self, data: pd.DataFrame | dict) -> Tuple[bool, List[str], pd.DataFrame]:
+    def validate(
+        self, data: pd.DataFrame | dict
+    ) -> Tuple[bool, List[str], pd.DataFrame]:
         """
         Validate input data.
         Returns:
@@ -70,7 +74,9 @@ class DataValidator:
         missing_rates = df.isnull().mean()
         for col, rate in missing_rates.items():
             if rate > self.max_missing_rate:
-                issues.append(f"Column '{col}' has high missing rate: {rate:.1%} > {self.max_missing_rate:.1%}")
+                issues.append(
+                    f"Column '{col}' has high missing rate: {rate:.1%} > {self.max_missing_rate:.1%}"
+                )
 
         # 2. Numerical range check
         for col, (min_val, max_val) in self.numeric_ranges.items():
@@ -108,7 +114,9 @@ class DataValidator:
             elif self.on_failure == "flag":
                 logger.warning("Data validation FLAG: %s", msg)
             elif self.on_failure == "default":
-                logger.info("Data validation DEFAULT: %s (applied fallback defaults)", msg)
+                logger.info(
+                    "Data validation DEFAULT: %s (applied fallback defaults)", msg
+                )
 
         return is_valid, issues, df
 

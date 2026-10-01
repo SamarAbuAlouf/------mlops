@@ -5,6 +5,7 @@ Integration tests for FastAPI endpoints end-to-end.
 Requirement 6: Integration tests for the API routes end to end.
 Definition of Done #4: Break something on purpose — bad data — and show the system catches it.
 """
+
 from fastapi import status
 
 

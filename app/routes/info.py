@@ -2,6 +2,7 @@
 app/routes/info.py
 Model metadata and feature schema endpoint.
 """
+
 from fastapi import APIRouter
 
 from app.schemas import ModelInfoResponse
@@ -12,7 +13,9 @@ from src.predict import get_model_version, load_model
 router = APIRouter(tags=["Model Info"])
 
 
-@router.get("/info", response_model=ModelInfoResponse, summary="Get model metadata and schema")
+@router.get(
+    "/info", response_model=ModelInfoResponse, summary="Get model metadata and schema"
+)
 async def get_model_info():
     """Returns details about current active model, version, decision threshold, and feature expectations."""
     model = load_model()

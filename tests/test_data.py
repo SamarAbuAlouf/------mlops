@@ -4,6 +4,7 @@ Data tests: schema, ranges, null rates, and leakage checks.
 
 Requirement 6: Data tests: schema, ranges, nulls, leakage checks.
 """
+
 import pytest
 from src.features import ALL_FEATURES
 from src.validation import DataValidator, DataValidationError
@@ -19,7 +20,9 @@ def test_data_leakage_target_exclusion():
         "order_delivered_carrier_date",
     ]
     for leak_col in leakage_columns:
-        assert leak_col not in ALL_FEATURES, f"Target leakage detected! '{leak_col}' found in ALL_FEATURES"
+        assert (
+            leak_col not in ALL_FEATURES
+        ), f"Target leakage detected! '{leak_col}' found in ALL_FEATURES"
 
 
 def test_validation_detects_out_of_bounds_range():

@@ -4,6 +4,7 @@ Loads config/config.yaml and resolves environment-variable placeholders.
 
 Every module imports settings from here; nothing reads config.yaml directly.
 """
+
 from __future__ import annotations
 import os
 import re
@@ -23,10 +24,12 @@ def _resolve_env(value: Any) -> Any:
     """
     if isinstance(value, str):
         pattern = r"\$\{(\w+)(?::([^}]*))?\}"
+
         def replacer(m: re.Match) -> str:
             env_key = m.group(1)
             default = m.group(2) if m.group(2) is not None else ""
             return os.environ.get(env_key, default)
+
         return re.sub(pattern, replacer, value)
     if isinstance(value, dict):
         return {k: _resolve_env(v) for k, v in value.items()}
@@ -40,6 +43,7 @@ def load_config(path: Path = _CONFIG_PATH) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
     return _resolve_env(raw)
+
 
 # Load local .env if present
 load_dotenv()
